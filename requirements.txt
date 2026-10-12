@@ -1,0 +1,20 @@
+# Probado con Python 3.14.7 (Windows 11). También debería funcionar con 3.12 / 3.13.
+
+# Orquestación
+langgraph>=1.2
+langchain>=1.4                  # create_agent (agentes ReAct de los especialistas)
+langchain-core>=1.6
+
+# LLM (Gemini) + embeddings de la Vector DB de la Pre-entrega 4
+langchain-google-genai>=4.4
+
+# Herramienta del Investigador: RAG híbrido (BM25 + Pinecone)
+langchain-classic>=1.0          # EnsembleRetriever
+langchain-community>=0.4        # BM25Retriever
+langchain-text-splitters>=1.1
+pinecone>=10.0
+rank-bm25>=0.2
+tiktoken>=0.14
+pypdf>=6.19
+
+python-dotenv>=1.2

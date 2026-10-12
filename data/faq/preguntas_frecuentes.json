@@ -1,0 +1,36 @@
+{
+  "titulo": "Preguntas frecuentes sobre FastAPI",
+  "etiquetas": ["faq"],
+  "entradas": [
+    {
+      "pregunta": "¿FastAPI es compatible con Pydantic v2?",
+      "respuesta": "Sí. FastAPI soporta Pydantic v2 desde la versión 0.100.0 y es la versión recomendada. Pydantic v2 tiene su núcleo de validación escrito en Rust (pydantic-core), lo que lo hace bastante más rápido. Algunos métodos cambiaron de nombre al migrar: .dict() pasó a ser model_dump(), .json() pasó a ser model_dump_json() y la clase interna Config se reemplaza por model_config.",
+      "etiquetas": ["pydantic", "versiones", "migracion"]
+    },
+    {
+      "pregunta": "¿Qué relación tiene FastAPI con Starlette?",
+      "respuesta": "FastAPI es, en la práctica, una subclase de Starlette: hereda de ella el enrutamiento, el soporte ASGI, los WebSockets, los middlewares, las respuestas y el TestClient. Encima de Starlette, FastAPI agrega la validación con Pydantic, la inyección de dependencias y la generación automática del esquema OpenAPI. Por eso cualquier herramienta de Starlette se puede usar directamente en una aplicación FastAPI.",
+      "etiquetas": ["starlette", "asgi", "arquitectura"]
+    },
+    {
+      "pregunta": "¿Cómo organizo una aplicación grande en varios archivos?",
+      "respuesta": "Con APIRouter. Cada módulo (por ejemplo routers/usuarios.py y routers/items.py) crea un router = APIRouter(prefix='/usuarios', tags=['usuarios']) y declara sus rutas con @router.get(). Luego, en main.py, se incluyen con app.include_router(usuarios.router). El router también acepta dependencies y responses comunes para todas sus rutas.",
+      "etiquetas": ["apirouter", "estructura", "proyectos-grandes"]
+    },
+    {
+      "pregunta": "¿FastAPI soporta WebSockets?",
+      "respuesta": "Sí. Se declaran con el decorador @app.websocket('/ws') y una función que recibe un parámetro websocket: WebSocket. Dentro se llama a await websocket.accept() y luego se intercambian mensajes con receive_text(), send_text(), receive_json() o send_json(). Cuando el cliente se desconecta se lanza la excepción WebSocketDisconnect, que conviene capturar para limpiar recursos.",
+      "etiquetas": ["websockets", "tiempo-real"]
+    },
+    {
+      "pregunta": "¿Cómo leo variables de entorno y configuración?",
+      "respuesta": "La forma recomendada es pydantic-settings: se define una clase Settings(BaseSettings) con los campos de configuración y sus tipos, y Pydantic los lee y valida desde variables de entorno o desde un archivo .env. Para no recrearla en cada petición se expone con una función decorada con @lru_cache y se inyecta con Depends, lo que además permite reemplazarla en los tests.",
+      "etiquetas": ["configuracion", "pydantic-settings", "env"]
+    },
+    {
+      "pregunta": "¿Cómo devuelvo archivos o respuestas que no son JSON?",
+      "respuesta": "fastapi.responses incluye clases específicas: FileResponse para servir un archivo del disco, StreamingResponse para enviar contenido generado por partes (por ejemplo un CSV grande o la salida de un modelo de lenguaje token a token), HTMLResponse, PlainTextResponse y RedirectResponse. Para subir archivos desde el cliente se usa el parámetro UploadFile junto con File(), lo que requiere python-multipart.",
+      "etiquetas": ["respuestas", "archivos", "streaming", "uploadfile"]
+    }
+  ]
+}
