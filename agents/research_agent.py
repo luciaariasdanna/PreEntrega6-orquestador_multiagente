@@ -7,6 +7,7 @@ de FastAPI). No tiene calculadora: si necesita un número derivado, lo deja para
 from functools import lru_cache
 
 from langchain.agents import create_agent
+from langchain.agents.middleware import ToolCallLimitMiddleware
 from langchain_core.tools import tool
 
 import config
@@ -22,7 +23,9 @@ Reglas:
 - Buscá SIEMPRE con la herramienta antes de responder; no respondas de memoria.
 - Si la primera búsqueda no alcanza, reformulá la consulta (máximo 3 búsquedas).
 - NO hagas cálculos ni inventes números: transcribí los datos tal como aparecen
-  (valores, fórmulas, unidades). Los cálculos los hace otro agente.
+  (valores, fórmulas, unidades). Aunque la instrucción mencione datos del usuario
+  (núcleos, memoria, etc.), NO apliques las fórmulas a esos datos: los cálculos los hace
+  otro agente con su calculadora.
 - Respondé en viñetas breves y citá la fuente de cada dato con el formato [archivo, p. N].
 - Si un dato no aparece en la documentación, decilo explícitamente."""
 
@@ -33,7 +36,10 @@ def buscar_documentacion_fastapi(consulta: str) -> str:
     dependencias, middleware/CORS, tareas en segundo plano, OAuth2/JWT, testing,
     despliegue en producción con workers/Docker/HTTPS y FAQ). Devuelve los fragmentos
     más relevantes con su fuente."""
-    documentos = obtener_base().buscar(consulta)
+    try:
+        documentos = obtener_base().buscar(consulta)
+    except Exception as e:  # Pinecone/embeddings caídos: el agente recibe el error y puede reintentar
+        return f"Error al buscar en la documentación: {e}"
     if not documentos:
         return "No se encontraron fragmentos relevantes para esa consulta."
     return "\n\n".join(
@@ -47,8 +53,11 @@ HERRAMIENTAS = [buscar_documentacion_fastapi]
 
 @lru_cache(maxsize=1)
 def crear_agente_investigador():
+    # El límite hace cumplir en código el "máximo 3 búsquedas" del prompt: las llamadas
+    # excedentes se bloquean y el agente tiene que responder con lo que ya encontró.
+    limite = ToolCallLimitMiddleware(run_limit=config.MAX_BUSQUEDAS_INVESTIGADOR)
     return create_agent(model=config.obtener_llm(), tools=HERRAMIENTAS,
-                        system_prompt=SYSTEM_PROMPT, name="investigador")
+                        system_prompt=SYSTEM_PROMPT, middleware=[limite], name="investigador")
 
 
 def crear_nodo_investigador(agente=None):

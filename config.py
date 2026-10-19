@@ -22,6 +22,11 @@ GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-lite-latest")
 MAX_PASOS = int(os.getenv("MAX_PASOS", "6"))
 # Veces que un mismo especialista puede ser invocado (1ra vez + refinamientos).
 MAX_VISITAS_POR_AGENTE = int(os.getenv("MAX_VISITAS_POR_AGENTE", "2"))
+# Tope de tool calls de cada especialista DENTRO de una visita (ToolCallLimitMiddleware).
+MAX_BUSQUEDAS_INVESTIGADOR = int(os.getenv("MAX_BUSQUEDAS_INVESTIGADOR", "3"))
+MAX_CALCULOS_ANALISTA = int(os.getenv("MAX_CALCULOS_ANALISTA", "8"))
+# Red de seguridad del bucle ReAct interno de cada especialista (pasos del subgrafo).
+RECURSION_LIMIT_ESPECIALISTA = int(os.getenv("RECURSION_LIMIT_ESPECIALISTA", "25"))
 
 # --- Vector DB de la Pre-entrega 4 (Pinecone) -------------------------------
 # Mismos valores que la PE4: el índice ya está cargado, acá solo se consulta.

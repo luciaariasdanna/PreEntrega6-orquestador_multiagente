@@ -12,6 +12,7 @@ import statistics
 from functools import lru_cache
 
 from langchain.agents import create_agent
+from langchain.agents.middleware import ToolCallLimitMiddleware
 from langchain_core.tools import tool
 
 import config
@@ -23,9 +24,13 @@ Tu única función es procesar datos numéricos que YA te fueron entregados.
 
 Reglas:
 - Hacé TODOS los cálculos con tus herramientas (`calculadora`, `resumen_estadistico`);
-  nunca calcules "de cabeza".
+  nunca calcules "de cabeza". Una llamada por cada resultado que muestres, incluso los
+  triviales (por ejemplo `17 * 1`): el supervisor verifica cada resultado contra tus
+  llamadas.
 - NO busques ni inventes datos nuevos. Si te falta un dato para calcular, respondé
   exactamente qué dato falta.
+- Si los datos recibidos ya traen un número derivado (por ejemplo, una fórmula ya
+  aplicada), NO lo des por bueno: recalculalo con `calculadora`.
 - Mostrá cada cálculo como: expresión = resultado (con unidades).
 - Si los datos llevan a una conclusión relevante (por ejemplo, que un recurso no
   alcanza), señalala explícitamente.
@@ -97,8 +102,9 @@ HERRAMIENTAS = [calculadora, resumen_estadistico]
 
 @lru_cache(maxsize=1)
 def crear_agente_analista():
+    limite = ToolCallLimitMiddleware(run_limit=config.MAX_CALCULOS_ANALISTA)
     return create_agent(model=config.obtener_llm(), tools=HERRAMIENTAS,
-                        system_prompt=SYSTEM_PROMPT, name="analista")
+                        system_prompt=SYSTEM_PROMPT, middleware=[limite], name="analista")
 
 
 def contexto_para_analista(state: AgentState) -> str:

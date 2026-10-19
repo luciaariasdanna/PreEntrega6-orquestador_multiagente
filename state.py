@@ -22,12 +22,20 @@ NombreEspecialista = Literal["investigador", "analista"]
 Destino = Literal["investigador", "analista", "FINISH"]
 
 
+class LlamadaHerramienta(TypedDict):
+    herramienta: str
+    argumentos: dict          # lo que el LLM le pasó a la herramienta
+    resultado: str            # lo que la herramienta devolvió (recortado)
+    exito: bool               # False si la herramienta falló o la bloqueó el límite de llamadas
+
+
 class Contribucion(TypedDict):
     agente: NombreEspecialista
     paso: int
     instruccion: str          # lo que el Supervisor le pidió (contexto acotado)
     aporte: str               # lo que el especialista devolvió
     herramientas: list[str]   # herramientas que efectivamente invocó
+    llamadas: list[LlamadaHerramienta]  # cada invocación con argumentos y resultado
 
 
 class Decision(TypedDict):

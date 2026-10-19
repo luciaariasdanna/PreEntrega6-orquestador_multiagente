@@ -1,0 +1,30 @@
+sequenceDiagram
+    autonumber
+    actor U as Usuario
+    participant S as 🧭 Supervisor
+    participant I as 🔎 Investigador
+    participant B as buscar_documentacion_fastapi
+    participant A as 🧮 Analista
+    participant C as calculadora
+    participant Y as 📝 Síntesis
+
+    U->>S: pregunta (8 núcleos, modelo de 1 GB, 16 GB RAM)
+    Note over S: rúbrica ✘✘✘✘ → falta el dato de la doc
+    S->>I: "Buscá la recomendación de workers según los núcleos"
+    I->>B: "workers Gunicorn Uvicorn núcleos CPU formula"
+    B-->>I: [despliegue_en_produccion.pdf, p. 1] (2 x núcleos) + 1
+    I-->>S: Contribucion: fórmula + fuente (sin calcular)
+    Note over S: rúbrica ✔✘✔✘ → hay datos, falta calcular
+    S->>A: "Con 8 núcleos y 1 GB por worker, calculá..." + datos del Investigador
+    A->>C: (2 * 8) + 1
+    C-->>A: 17
+    A->>C: 17 * 1
+    C-->>A: 17
+    A->>C: 16 - 2
+    C-->>A: 14
+    A->>C: 14 // 1
+    C-->>A: 14
+    A-->>S: Contribucion: 4 cálculos + conclusión
+    Note over S: rúbrica ✔✔✔✔ y evidencia OK<br/>(cada resultado sale de una llamada) → FINISH
+    S->>Y: aportes + motivo de cierre
+    Y-->>U: "No alcanza con 16 GB... máximo 14 workers [despliegue_en_produccion.pdf, p. 1]"

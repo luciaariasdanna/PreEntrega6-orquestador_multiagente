@@ -35,6 +35,9 @@ def imprimir_evento(nodo: str, actualizacion: dict) -> None:
             print(f"   cierre: {actualizacion['motivo_cierre']}")
     for c in actualizacion.get("contribuciones", []):
         print(f"   herramientas usadas: {', '.join(c['herramientas']) or 'ninguna'}")
+        for ll in c.get("llamadas", []):
+            args = ", ".join(f"{k}={v!r}" for k, v in ll["argumentos"].items())
+            print(f"     ↳ {ll['herramienta']}({args}) -> {'' if ll['exito'] else '[FALLÓ] '}{ll['resultado']}")
         print("   aporte: " + c["aporte"].replace("\n", "\n           "))
     if nodo == "sintesis":
         print("\n" + "=" * 70 + "\nRESPUESTA FINAL\n" + "=" * 70)

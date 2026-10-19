@@ -1,0 +1,44 @@
+---
+title: Orquestador jerárquico (Supervisor + especialistas)
+---
+flowchart TD
+    U([Usuario: pregunta]) --> START([START])
+    START --> SUP
+
+    subgraph CONTROL["Nodo supervisor (agents/supervisor.py)"]
+        SUP{{"🧭 Supervisor<br/>LLM con salida estructurada<br/>DecisionSupervisor"}}
+        RUB["1 · Rúbrica (LLM)<br/>datos_con_fuente · calculos_verificados<br/>consistencia · responde_pregunta"]
+        EVI["2 · Verificación de evidencia (código)<br/>¿hubo búsquedas? ¿cada resultado<br/>sale de la calculadora?"]
+        GUA["3 · Guardas (código)<br/>MAX_PASOS = 6<br/>MAX_VISITAS_POR_AGENTE = 2"]
+        SUP --> RUB --> EVI --> GUA
+    end
+
+    GUA -. "next = investigador<br/>(falta un dato de la doc)" .-> INV
+    GUA -. "next = analista<br/>(hay datos, falta calcular)" .-> ANA
+    GUA -. "next = FINISH<br/>(rúbrica aprobada o guarda)" .-> SIN
+
+    subgraph ESP["Especialistas (create_agent, bucle ReAct interno)"]
+        INV["🔎 Investigador<br/>máx. 3 búsquedas"]
+        ANA["🧮 Analista<br/>máx. 8 cálculos"]
+        T1[("buscar_documentacion_fastapi<br/>BM25 + Pinecone (Vector DB PE4)")]
+        T2[["calculadora (ast segura)"]]
+        T3[["resumen_estadistico"]]
+        INV <-- "tool call / ToolMessage" --> T1
+        ANA <-- "tool call / ToolMessage" --> T2
+        ANA <-- "tool call / ToolMessage" --> T3
+    end
+
+    INV -- "Contribucion<br/>(aporte + llamadas)" --> SUP
+    ANA -- "Contribucion<br/>(aporte + llamadas)" --> SUP
+
+    SIN["📝 Síntesis<br/>solo usa los aportes"] --> FIN([END])
+    FIN --> R([Respuesta final con citas])
+
+    classDef ctrl fill:#ede9fe,stroke:#7c3aed,color:#1e1b4b
+    classDef esp fill:#e0f2fe,stroke:#0284c7,color:#082f49
+    classDef tool fill:#fef9c3,stroke:#ca8a04,color:#422006
+    classDef fin fill:#dcfce7,stroke:#16a34a,color:#052e16
+    class SUP,RUB,EVI,GUA ctrl
+    class INV,ANA esp
+    class T1,T2,T3 tool
+    class SIN,FIN,R fin
